@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Movie Search</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#listLayout").hide();
+            $("#gridLayout").hide();
+            
+            var radioValue = "";
+            $('input:radio[name=user_selection]').change(function () {
+                if (this.value == "tv") {
+                    $("#searchTerm").hide();
+                    $("#button1").val("Click to Discover").css("margin-left", "29.30rem");
+
+                }
+                else if (this.value == "movie") {
+                    $("#searchTerm").hide();
+                    $("#button1").val("Click to Discover").css("margin-left", "20rem");
+                }
+                else {
+                    $("#searchTerm").show();
+                    $("#button1").val("Search").css("margin-left", "0rem");
+                }
+            });
+            var servicesite = "https://api.themoviedb.org/3/search/movie?query=";
+            const api_key = "api_key=596a559ed3e4a3408502d51411f3d607";
+
+            $("#button1").click(function () {
+                var radioValue = $("input[name='user_selection']:checked").val();
+                var url = "";
+                if (radioValue === "tv") {
+                    servicesite =
+                        url = `https://api.themoviedb.org/3/discover/tv?${api_key}&with_genres=drama&language=en-US&sort_by=popularity.desc&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate&with_status=0&with_type=0`;
+                }
+                else if (radioValue === "movie") {
+
+                    url = `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_watch_monetization_types=flatrate`
+                }
+                else if (radioValue == "tvSearch") {
+                    url = `https://api.themoviedb.org/3/search/tv?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=1&include_adult=false`;
+                }
+                else {
+                    url = `https://api.themoviedb.org/3/search/movie?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=1&include_adult=false`;
+                }
+
+
+
+                searchBooks(url);
+            });
+
+            //add click events to pages so additional ajax can be triggered
+            $("#pages").on('click', function (event) {
+                var number = $(event.target).text()
+                var radioValue = $("input[name='user_selection']:checked").val();
+                var url = "";
+                if (radioValue === "tv") {
+                    url = `https://api.themoviedb.org/3/discover/tv?${api_key}&language=en-US&sort_by=popularity.desc&page=${number}&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate&with_status=0&with_type=0`;
+                }
+                else if (radioValue === "movie") {
+                    url = `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&page=${number}&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate&with_status=0&with_type=0`;
+                }
+                else if (radioValue == "tvSearch") {
+                    url = `https://api.themoviedb.org/3/search/tv?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=${number}&include_adult=false`;
+                }
+                else {
+                    url = `https://api.themoviedb.org/3/search/movie?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=${number}&include_adult=false`;
+                }
+                searchBooks(url);
+            });
+
+            function searchBooks(servicePoint) {
+                $("#listLayout").show();
+                $("#gridLayout").show();
+                $("#pages").show();
+                var image = "";
+                var title = "";
+                var genreName = "";
+                $("#results").html("Searching ...");
+                $.getJSON(servicePoint, function (jsonData) {
+                    console.log(jsonData)
+
+                    $("#pages").html("Pages: ");
+                    if (jsonData.total_pages > 5) {
+                        for (i = 1; i <= 5; i++) {
+                            $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
+                        }
+                    }
+                    else {
+                        for (i = 1; i <= jsonData.total_pages; i++) {
+                            $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
+                        }
+                    }
+                    $("#results").html("");
+                    for (i = 0; i < jsonData.results.length; i++) {
+
+                        image = `https://image.tmdb.org/t/p/w500/${jsonData.results[i].poster_path}`;
+                        if (jsonData.results[i].poster_path == null) {
+                            image = "https://via.placeholder.com/150";
+                        }
+                        if (jsonData.results[i].hasOwnProperty('name')) {
+                            title = jsonData.results[i].name;
+                        }
+                        else {
+                            title = jsonData.results[i].title;
+                        }
+                        bookdiv = "<div class='book'>";
+                        bookdiv += `<img class='movie' id='${jsonData.results[i].id}' src='` + image + "' />";
+                        bookdiv += "<h3 style='padding:3%; margin: 25   %'>" + title + "</h3>";
+                        bookdiv += `<a  style='color: aliceblue; padding:3%' href='#' class='movieID' id='${jsonData.results[i].id}'>More Details. . .</a>`
+                        // bookdiv += `Genre: ${genreName}`;
+                        bookdiv += "<p style='padding:3%'>Rating: " + jsonData.results[i].vote_average + " / 10</p>";
+                        bookdiv += "</div>";
+
+                        $("#results").append(bookdiv);
+                    }
+                    $(".movieID").on('click', function () { getBookDetails($(this).attr("id")); });
+
+                });
+            }
+
+            function getBookDetails(movieID) {
+                $("#results").html("");
+                $("#results").html("Loading . . .");
+                $("#pages").hide();
+                $("#listLayout").hide();
+                $("#gridLayout").hide();
+
+                var movie = "";
+                var title = "";
+
+                var radioValue = $("input[name='user_selection']:checked").val();
+                var url = "";
+
+                if (radioValue == "movieSearch" || radioValue == "movie") {
+
+                    url = `https://api.themoviedb.org/3/movie/${movieID}?${api_key}&language=en-US`;
+                }
+                else if (radioValue == "tvSearch" || radioValue == "tv") {
+                    url = `https://api.themoviedb.org/3/tv/${movieID}?${api_key}&language=en-US`;
+                }
+
+                try {
+                    $.getJSON(`${url}`, function (jsonData) {
+                        console.log(jsonData);
+                        if (jsonData.hasOwnProperty('name')) {
+                            title = jsonData.name;
+                        }
+                        else {
+                            title = jsonData.original_title;
+                        }
+                        movie = "<div class='book' style='margin-left: 30%; width: 30%; padding: 2%;'>"
+                        movie += `<img src='https://image.tmdb.org/t/p/w500/${jsonData.poster_path}` + "'/>";
+                        movie += `<h2>Title: ${title}</h2>`;
+                        movie += "<h3 style='width:100%'>Description: <span style='font-size: 1rem;'>" + jsonData.overview + "</span></h3>";
+
+                        movie += "<div>Rating: " + jsonData.vote_average + "</div>";
+                        movie += "</div>"
+                        $("#results").html("");
+                        $("#results").append(movie)
+                        // $("#books").html("<p>Service URL: " + servicePoint + "</p>");
+                        // $.each(jsonData.Books, function (index, book) {
+                        //     $("#books").append("<img class='bookicon' id='" + book.isbn + "' src='" + book.Image + "' width=80 />");
+                        // });
+                        // $(".bookicon").on('click', function () { getBookDetails($(this).attr("id")); });
+                    });
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                $("#results").html("<h2>Book ISBN: " + bookisbn + "</h2>");
+            }
+
+
+            $("#listLayout").click(function () {
+                $("#results").css({ "display": "flex", "flex-direction": "column" });
+            });
+
+            $("#gridLayout").click(function () {
+                $("#results").css({ "display": "flex", "flex-wrap": "wrap", "flex-direction": "row" });
+                $(".book").css({ "display": "flex", "flex-wrap": "wrap", "flex-basis": "20%" });
+            });
+        });
+
+    </script>
+    <style>
+        body {
+            background-color: rgb(147, 255, 255);
+        }
+        img {
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            /* border-bottom-left-radius: 100%; */
+            border-bottom-right-radius: 20rem;
+            border-bottom-left-radius: 90px;
+            transition: border-radius 1s;
+            
+            
+        }
+        img:hover {
+            transition: border-radius .90s;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        #pages {
+            margin-top: 2rem;
+        }
+
+        #results {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+        }
+
+        .book {
+            background-color: rgb(182, 183, 255);
+            border: solid rgb(205, 255, 105);
+            border-radius: 25px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transition: box-shadow 0.3s ease-in-out;
+            width: 20%;
+            margin: 2%;
+            /* padding: 1%; */
+            display: flex;
+            justify-content: flex-start;
+            align-items: stretch;
+            align-content: stretch;
+            flex-direction: column;
+            flex-wrap: nowrap;
+        }
+        .book:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .page {
+            border: thin solid rgb(0, 225, 255);
+            padding: 10px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .radio-btns {
+            display: flex;
+            gap: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Search Movies & TV Shows or Discover Movies & TV Shows</h1>
+    <div class="radio-btns">
+        <div>
+            <input type="radio" value="movieSearch" name="user_selection" checked="checked">
+            <label>Search Movies</label>
+        </div>
+        <div>
+            <input type="radio" value="tvSearch" name="user_selection">
+            <label>Search TV Shows</label>
+        </div>
+        <div>
+            <input type="radio" value="movie" name="user_selection">
+            <label>Discover Movies</label>
+        </div>
+        <div>
+            <input type="radio" value="tv" name="user_selection">
+            <label>Discover TV Shows</label>
+        </div>
+    </div>
+    
+    <br>
+
+    <input type="text" id="searchTerm" value="Harry Potter" />
+    <input type="button" id="button1" value="Search" /> 
+    <label>Safe Search: </label>
+    <span>on</span> <input type="radio" value="on" name="safeSearch" checked="checked">
+    <span>off</span> <input type="radio" value="off" name="safeSearch">
+    <p id="pages"></p>
+    <input type="button" id="listLayout" value="Change to List-Layout"/>
+    <input type="button" id="gridLayout" value="Change to Grid-Layout"/>
+
+    <div id="results"></div>
+    <div id="book"></div>
+</body>
+
+</html>

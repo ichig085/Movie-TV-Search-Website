@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script>
+        $.getJSON("https://api.themoviedb.org/3/search/movie?query=harry potter&api_key=596a559ed3e4a3408502d51411f3d607&language=en-US&page=1&include_adult=false", function (jsonData) {
+            console.log(jsonData)
+            for (var i = 0; i < jsonData.results.length; i++) {
+                movie = "<img src='https://via.placeholder.com/150' />";
+                movie += `<h2>Title: ${jsonData.results[i].title}</h2>`;
+            }
+            // movie = "<div class='book' style='margin-left: 30%; width: 30%; padding: 2%;'>"
+            // movie += `<img src='https://image.tmdb.org/t/p/w500/${jsonData.poster_path}` + "'/>";
+            // movie += `<h2>Title: ${title}</h2>`;
+            // movie += "<h3 style='width:100%'>Description: <span style='font-size: 1rem;'>" + jsonData.overview + "</span></h3>";
+
+            // movie += "<div>Rating: " + jsonData.vote_average + "</div>";
+            // movie += "</div>"
+            // $("#results").html("");
+            $(".content").append(movie)
+        });
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f1f1f1;
+            padding: 20px;
+            font-family: Arial;
+        }
+
+        /* Center website */
+        .main {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 50px;
+            word-break: break-all;
+        }
+
+        .row {
+            margin: 8px -16px;
+        }
+
+        /* Add padding BETWEEN each column */
+        .row,
+        .row>.column {
+            padding: 8px;
+        }
+
+        /* Create four equal columns that floats next to each other */
+        .column {
+            float: left;
+            width: 25%;
+        }
+
+        /* Clear floats after rows */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Content */
+        .content {
+            background-color: white;
+            padding: 10px;
+        }
+
+        /* Responsive layout - makes a two column-layout instead of four columns */
+        @media screen and (max-width: 900px) {
+            .column {
+                width: 50%;
+            }
+        }
+
+        /* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+        @media screen and (max-width: 600px) {
+            .column {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MAIN (Center website) -->
+    <div class="main">
+
+        <h1>MYLOGO.COM</h1>
+        <hr>
+
+        <h2>PORTFOLIO</h2>
+        <p>Resize the browser window to see the responsive effect.</p>
+
+        <!-- Portfolio Gallery Grid -->
+        <div class="row">
+            <div class="column">
+                <div class="content" >
+                    <img src="/w3images/mountains.jpg" alt="Mountains" style="width:100%">
+                    <h3>My Work</h3>
+                    <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas
+                        oporteat nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+                </div>
+            </div>
+            <div class="column">
+                <div class="content">
+                    <img src="/w3images/lights.jpg" alt="Lights" style="width:100%">
+                    <h3>My Work</h3>
+                    <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas
+                        oporteat nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+                </div>
+            </div>
+            <div class="column">
+                <div class="content">
+                    <img src="/w3images/nature.jpg" alt="Nature" style="width:100%">
+                    <h3>My Work</h3>
+                    <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas
+                        oporteat nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+                </div>
+            </div>
+            <div class="column">
+                <div class="content">
+                    <img src="/w3images/mountains.jpg" alt="Mountains" style="width:100%">
+                    <h3>My Work</h3>
+                    <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas
+                        oporteat nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+                </div>
+            </div>
+            <!-- END GRID -->
+        </div>
+
+        <div class="content">
+            <img src="/w3images/p3.jpg" alt="Bear" style="width:100%">
+            <h3>Some Other Work</h3>
+            <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas oporteat
+                nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+            <p>Lorem ipsum dolor sit amet, tempor prodesset eos no. Temporibus necessitatibus sea ei, at tantas oporteat
+                nam. Lorem ipsum dolor sit amet, tempor prodesset eos no.</p>
+        </div>
+
+        <!-- END MAIN -->
+    </div>
+
+</body>
+
+</html>

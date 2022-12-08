@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Movie Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#listLayout").hide();
+            $("#gridLayout").hide();
+
+            var radioValue = "";
+            var url = ""
+            var multi_media_type = {};
+            var getPerson = false;
+            $('input:radio[name=user_selection]').change(function () {
+
+                if (this.value == "tv") {
+                    $("#searchTerm").hide();
+                    $("#button1").val("Discover TV Shows").css({ "margin-left": "29.30rem", "cursor": "pointer" });
+
+                    //https://api.themoviedb.org/3/person/287?api_key=596a559ed3e4a3408502d51411f3d607&language=en-US
+                    //https://api.themoviedb.org/3/search/multi?query=harry potter&api_key=596a559ed3e4a3408502d51411f3d607&language=en-US&page=1&include_adult=false
+                    //https://api.themoviedb.org/3/search/person?api_key=596a559ed3e4a3408502d51411f3d607&language=en-US&query=Brad%20Pitt&page=1&include_adult=false
+
+                }
+                else if (this.value == "movie") {
+                    $("#searchTerm").hide();
+                    $("#button1").val("Discover Movies").css({ "margin-left": "20rem", "cursor": "pointer" });
+                }
+                else {
+                    $("#searchTerm").show();
+                    $("#button1").val("Search").css("margin-left", "0rem");
+                }
+            });
+            const api_key = "api_key=596a559ed3e4a3408502d51411f3d607";
+
+            $("#button1").click(function () {
+                if (sessionStorage.getItem("media_type") || sessionStorage.getItem("name")) {
+                    sessionStorage.removeItem("media_type");
+                    sessionStorage.removeItem("name");
+                }
+                // do {
+                //     var userSearchInput = $("#searchTerm").val()
+                // }while (userSearchInput == "") {
+                //     alert("Invalid Search. Try again");
+                // }
+
+                sessionStorage.setItem("url", url);
+                var radioValue = $("input[name='user_selection']:checked").val();
+                var isAdult = $("input[name='safeSearch']:checked").val();
+                if (radioValue === "tv") {
+                    url = `https://api.themoviedb.org/3/discover/tv?${api_key}&with_genres=drama&language=en-US&sort_by=popularity.desc&page=1&include_adult=${isAdult}&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate&with_status=0&with_type=0`;
+                }
+                else if (radioValue === "movie") {
+
+                    url = `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=1&with_watch_monetization_types=flatrate`
+                }
+                else if (radioValue == "tvSearch") {
+                    url = `https://api.themoviedb.org/3/search/tv?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=1&include_adult=${isAdult}`;
+                }
+                else {
+
+                    //https://api.themoviedb.org/3/search/multi?api_key=596a559ed3e4a3408502d51411f3d607&language=en-US&query=Brad%20Pitt&page=1&include_adult=false
+                }
+                url = `https://api.themoviedb.org/3/search/multi?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=1&include_adult=${isAdult}`;
+                sessionStorage.setItem("url1", `https://api.themoviedb.org/3/search/multi?${api_key}&language=en-US&query=${$("#searchTerm").val()}&language=en-US&include_adult=false&page=`);
+                sessionStorage.setItem("url2", "&language=en-US&include_adult=false");
+                
+                searchBooks(url);
+            });
+            $("#movies").click(function () {
+                if (sessionStorage.getItem("media_type") || sessionStorage.getItem("name")) {
+                    sessionStorage.removeItem("media_type");
+                    sessionStorage.removeItem("name");
+                }
+                var isAdult = $("input[name='safeSearch']:checked").val();
+                url = `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=1&with_watch_monetization_types=flatrate`;
+
+                sessionStorage.setItem("url1", `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=`);
+                sessionStorage.setItem("url2", "&with_watch_monetization_types=flatrate");
+
+                searchBooks(url);
+            });
+            $("#tv").click(function () {
+                if (sessionStorage.getItem("media_type") || sessionStorage.getItem("name")) {
+                    sessionStorage.removeItem("media_type");
+                    sessionStorage.removeItem("name");
+                }
+                var isAdult = $("input[name='safeSearch']:checked").val();
+                url = `https://api.themoviedb.org/3/discover/tv?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=1&with_watch_monetization_types=flatrate`;
+                sessionStorage.setItem("url1", `https://api.themoviedb.org/3/discover/tv?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=`);
+                sessionStorage.setItem("url2", "&with_watch_monetization_types=flatrate");
+
+                searchBooks(url);
+            });
+            //add click events to pages so additional ajax can be triggered
+            $("#pages").on('click', function (event) {
+                
+                var number = $(event.target).text();
+                url = sessionStorage.getItem("url1") + number + sessionStorage.getItem("url2");
+                //console.log(url)
+                var radioValue = $("input[name='user_selection']:checked").val();
+                var isAdult = $("input[name='safeSearch']:checked").val();
+
+                searchBooks(url);
+            });
+
+            function searchBooks(servicePoint) {
+                var isMultiSearch = false;
+                if (servicePoint.includes("/multi")) {
+                    isMultiSearch = true;
+                }
+                $("#listLayout").show();
+                $("#gridLayout").show();
+                $("#pages").show();
+                var image = "";
+                var title = "";
+                var genreName = "";
+                var isAdult = $("input[name='user_selection']:checked").val();
+                $("#results").html("Searching ...");
+                $.getJSON(servicePoint, function (jsonData) {
+                    console.log(jsonData);
+                    console.log('called x`')
+                    
+                    var isAdult = false;
+                    $("#pages").html("Pages: ");
+                    if (jsonData.total_pages > 5) {
+                        for (i = 1; i <= 5; i++) {
+                            $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
+                        }
+                    }
+                    else {
+                        for (i = 1; i <= jsonData.total_pages; i++) {
+                            $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
+                        }
+                    }
+                    $("#results").html("");
+                    if (isMultiSearch || jsonData.results.hasOwnProperty("media_type")) {
+                        console.log("ismultisearch triggered erer");
+                        if (Object.keys(multi_media_type).length) {
+                            multi_media_type.clear();
+                        }
+                        for (i = 0; i < jsonData.results.length; i++) {
+                            multi_media_type[jsonData.results[i].id] = jsonData.results[i].media_type;
+                            // myMap.put(jsonData.results[i].id, jsonData.results[i].media_type);
+                            // multi_media_type.push(i + 1);
+                            // multi_media_type.push(jsonData.results[i].media_type);
+                            image = `https://image.tmdb.org/t/p/w500/`;
+                            // if (jsonData.results[i].hasOwnProperty("media_type") && jsonData.results[i].media_type == "person") {
+                            //     if (jsonData.results[i].media_type == "person") {
+                            //         sessionStorage.setItem("media_type", jsonData.results[i].media_type);
+                            //     }
+                            // }
+                            if (jsonData.results[i].hasOwnProperty("poster_path") && jsonData.results[i].poster_path == null || jsonData.results[i].hasOwnProperty("profile_path") && jsonData.results[i].profile_path == null) {
+                                image = `https://via.placeholder.com/360x500`;
+                            }
+                            else if (jsonData.results[i].profile_path != null) {
+                                image += jsonData.results[i].profile_path;
+                            }
+                            else {
+                                image += jsonData.results[i].poster_path;
+                            }
+                            if (jsonData.results[i].hasOwnProperty('name')) {
+                                title = jsonData.results[i].name;
+                            }
+                            else {
+                                title = jsonData.results[i].title;
+                            }
+                            bookdiv = "<div class='book'>";
+                            bookdiv += `<img style='cursor:pointer' class='movieID' id='${jsonData.results[i].id}' src='` + image + "' />";
+                            bookdiv += "<h3 style='padding:3%;'>" + title + "</h3>";
+                            $("#results").append(bookdiv);
+                        }
+                        sessionStorage.setItem("multi_media_type", multi_media_type);
+                    }
+                    else {
+                        for (i = 0; i < jsonData.results.length; i++) {
+
+                            image = `https://image.tmdb.org/t/p/w500/`;
+                            if (jsonData.results[i].hasOwnProperty("media_type") && jsonData.results[i].media_type == "person") {
+                                if (jsonData.results[i].media_type == "person") {
+                                    sessionStorage.setItem("media_type", jsonData.results[i].media_type);
+                                }
+                            }
+                            if (jsonData.results[i].hasOwnProperty("poster_path") && jsonData.results[i].poster_path == null || jsonData.results[i].hasOwnProperty("profile_path") && jsonData.results[i].profile_path == null) {
+                                image = `https://via.placeholder.com/360x500`;
+                            }
+                            else if (jsonData.results[i].profile_path != null) {
+                                image += jsonData.results[i].profile_path;
+                            }
+                            else {
+                                image += jsonData.results[i].poster_path;
+                            }
+                            if (jsonData.results[i].hasOwnProperty('name')) {
+                                title = jsonData.results[i].name;
+                            }
+                            else {
+                                title = jsonData.results[i].title;
+                            }
+                            bookdiv = "<div class='book'>";
+                            bookdiv += `<img style='cursor:pointer' class='movieID' id='${jsonData.results[i].id}' src='` + image + "' />";
+                            bookdiv += "<h3 style='padding:3%;'>" + title + "</h3>";
+
+                            $("#results").append(bookdiv);
+                        }
+                    }
+                    $(".movieID").on('click', function () { getBookDetails($(this).attr("id")); });
+
+                });
+            }
+
+            function getBookDetails(movieID) {
+                
+                console.log("multi_media_type is: ")
+                console.log(multi_media_type[movieID]);
+                $(".cast").empty();
+                $(".div11").empty();
+                $(".div22").empty();
+                $(".div33").empty();
+                $("#results").html("");
+                $("#results").html("Loading . . .");
+                $("#pages").hide();
+                $("#listLayout").hide();
+                $("#gridLayout").hide();
+                var media_type = sessionStorage.getItem("media_type");
+                var personNamr = sessionStorage.getItem("name");
+
+                var image = "https://image.tmdb.org/t/p/w500/"
+
+                var radioValue = $("input[name='user_selection']:checked").val();
+
+                // console.log(sessionStorage.getItem("url1").includes("/movie"));
+                // console.log(url);
+                console.log(media_type);
+                //fixed for discover tv shows click and search with tv shows
+                if (multi_media_type[movieID] == "tv") {
+                    url = `https://api.themoviedb.org/3/tv/${movieID}?${api_key}&language=en-US`;
+                }
+                else if (multi_media_type[person]) {
+
+                }
+                url = `https://api.themoviedb.org/3/movie/${movieID}?${api_key}&language=en-US`;
+                else if (multi_media_type[movieID] == "movie") {
+                }
+                else if (media_type == "person" || getPerson == true) {
+                    url = `https://api.themoviedb.org/3/person/${movieID}?api_key=596a559ed3e4a3408502d51411f3d607&language=en-US`
+                }
+                else {
+                    // console.log(sessionStorage.getItem("url1"))
+                    if (sessionStorage.getItem("url1").includes("/movie")) {
+                        url = `https://api.themoviedb.org/3/movie/${movieID}?${api_key}&language=en-US`;
+                    }
+                    else if (sessionStorage.getItem("url1").includes("/tv")) {
+                        url = `https://api.themoviedb.org/3/tv/${movieID}?${api_key}&language=en-US`;
+                    }
+                    else {
+                        url = `https://api.themoviedb.org/3/movie/${movieID}?${api_key}&language=en-US`;
+                    }
+                }
+
+                // console.log(url);
+                try {
+                    if (true) {
+                        console.log('not clearing for some reason');
+                        
+                        // $(".cast").remove();
+                        // $(".div11").remove();
+                        // $(".div22").remove();
+                        // $(".div33").remove();
+                        // $("#results").html("");
+                        // $("parent").empty();
+                        // $("parent1").empty();
+                    }
+                    
+                    // $(".cast").empty();
+                    // $(".div11").empty();
+                    // $(".div22").empty();
+                    // $(".div33").empty();
+                    $("results").html("");
+                    $.getJSON(url, function (jsonData) {
+                        console.log(url);
+                        console.log(jsonData);
+                        var movie = "";
+
+                        if (sessionStorage.getItem("media_type") == "person" || sessionStorage.getItem("name") != null) {
+                            image += jsonData.profile_path;
+                            var name = jsonData.name;
+                            var birthday = jsonData.birthday;
+                            var biography = "";
+                            var known_for = jsonData.known_for_department;
+                            var gender = jsonData.gender;
+                            var birthday = jsonData.birthday;
+                            var place_of_birth = jsonData.place_of_birth;
+                            var also_known_as = "";
+                            var trimmedStr = "";
+
+                            var break_paragraph = 0;
+                            if (jsonData.hasOwnProperty("biography")) {
+                                for (var i = 0; i < jsonData.biography.length; i++) {
+                                    biography += jsonData.biography.charAt(i);
+                                    var isCharBefore = /^[a-zA-Z]+$/.test(jsonData.biography.charAt(i - 1));
+                                    var isCharAfter = /^[a-zA-Z]+$/.test(jsonData.biography.charAt(i + 1));
+                                    var isCharAfter2 = /^[a-zA-Z]+$/.test(jsonData.biography.charAt(i + 3));
+    
+                                    // console.log(isChar)
+                                    if (jsonData.biography.charAt(i) == "." && isCharBefore == true && isCharAfter == true && isCharAfter2 == true) {
+                                        continue;
+                                    }
+                                    else {
+                                        console.log(break_paragraph);
+                                        break_paragraph++;
+    
+                                    }
+                                    if (break_paragraph % 4 == 0 && jsonData.biography.charAt(i) == ".") {
+                                        console.log("break created")
+                                        biography += "<br><br>";
+                                    }
+                                }
+                            }
+                            if (jsonData.hasOwnProperty("also_known_as")) {
+                                for (var i = 0; i < jsonData.also_known_as.length; i++) {
+                                    also_known_as += `<p style='margin-top:.25rem; font-size: .90rem;'>${jsonData.also_known_as[i]}</p>`
+                                }
+    
+                                if (gender == "1") {
+                                    gender = "Female";
+                                }
+                                else if (gender == "2") {
+                                    gender = "Male";
+                                }
+                                else if (gender == "3") {
+                                    gender = "Non-binary";
+                                }
+                                else {
+                                    gender = "-"
+                                }
+                            }
+                            else {
+                                also_known_as += `<p style='margin-top:.25rem; font-size: .90rem;'>No information found.</p>`
+                            }
+                            //changed div1 to div11 and same with div2 to div22
+                            movie = `<div class='div11'><img src='${image}' style='width: 100%; height: auto;'/><h3>Personal Info</h3><p style='font-weight:bold; margin-bottom:0; font-size: 1rem;'>Known For</p><p style='margin-top:.25rem; font-size: .90rem;'>${known_for}</p><p style='font-weight:bold; margin-bottom:0; font-size: 1rem;'>Gender</p><p style='margin-top:.25rem; font-size: .90rem;'>${gender}</p><p style='font-weight:bold; margin-bottom:0; font-size: 1rem;'>Birthday</p><p style='margin-top:.25rem; font-size: .90rem;'>${birthday}</p><p style='font-weight: bold; margin-bottom:0; font-size: 1rem;'>Place of Birth</p><p style='margin-top:.25rem; font-size: .90rem;'>${place_of_birth}</p><p style='font-weight:bold; margin-bottom:0; font-size: 1rem;'>Also Known As</p>${also_known_as}</div>`
+                            movie += `<div class='div22' style='width:80%;'><h2 style='padding-left: 1rem; margin-top: 0;'>${name}</h2><h3 style='padding-left: 1rem; margin-bottom: .5rem;'>Biography</h3><p style='font-size:.90rem; padding-left: 1rem; margin-top: 0;'>${biography}</p></div>`
+                            
+                            $("#results").html("");
+                            $(".parent").html("");
+                            $(".parent").append(movie);
+                            getPerson = false;
+                        }
+                        else if (url.includes("/tv")) {
+                            var cast = "";
+                            image = `https://image.tmdb.org/t/p/w500/`;
+
+                            url = `https://api.themoviedb.org/3/tv/${movieID}/credits?${api_key}&language=en-US`;
+
+                            //https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key=<<api_key>>&language=en-US
+                            try {
+                                
+                                $.getJSON(url, function (jsonData) {
+                                    console.log(jsonData);
+                                    // sessionStorage.setItem("cast_id", jsonData.cast_id[]);
+                                    if (jsonData.cast[0].hasOwnProperty("name")) {
+                                        sessionStorage.setItem("name", jsonData.cast[0].name);
+                                    }
+                                    for (var i = 0; i < 5; i++) {
+                                        if (!jsonData.cast[i].hasOwnProperty("profile_path") || jsonData.cast[i].profile_path == null) {
+                                            image = "https://via.placeholder.com/360x500";
+                                        }
+                                        else {
+                                            image = `https://image.tmdb.org/t/p/w500/${jsonData.cast[i].profile_path}`;
+                                        }
+    
+                                        cast += `<div class='cast' style='margin-left:.25rem; width: 100%;'><img style='cursor: pointer; width: 100%; height: 80%;' class='movieID' id='${jsonData.cast[i].id}' src='${image}'/><p style='font-size: .95rem; margin-top:0;'>${jsonData.cast[i].name}</p></div>`;
+                                    }
+    
+                                    console.log(jsonData);
+                                    
+                                    
+                                    $(".div33").append(cast).css({ "margin-top": "0" });
+                                    getPerson = true;
+                                    console.log(getPerson);
+                                    $(".movieID").on('click', function () { getBookDetails($(this).attr("id")); });
+                                });
+                            } catch (error) {
+                                cast = "We don't have any cast to add to this show";
+                                $(".div33").append(cast).css({ "margin-top": "0" });
+                                getPerson = false;  
+                                console.log(getPerson);
+                            }    
+                            var title = "";
+                            var overview = jsonData.overview;
+                            var genres = "";
+                            var vote = jsonData.vote_average;
+                            var release_date = "";
+                            var runtimeMinutes = "";
+
+                            if (url.includes("/movie")) {
+                                release_date = jsonData.release_date;
+                                var runtimeHours = Math.floor(jsonData.runtime / 60);
+                                runtimeMinutes = jsonData.runtime % 60 + "hr";
+                                console.log("movie");
+                            }
+                            else if (url.includes("/tv")) {
+                                var release_date = jsonData.first_air_date;
+                                var runtimeMinutes = jsonData.episode_run_time + "min";
+
+                                console.log("tv");
+                            }
+
+                            if (jsonData.hasOwnProperty('name')) {
+                                title = jsonData.name;
+                            }
+                            else {
+                                title = jsonData.original_title;
+                            }
+                            if (jsonData.poster_path == null) {
+                                image = "https://via.placeholder.com/360x500";
+                            }
+                            else {
+                                image += jsonData.poster_path;
+                            }
+
+                            for (var i = 0; i < jsonData.genres.length; i++) {
+                                if (i == jsonData.genres.length - 1) {
+                                    genres += `${jsonData.genres[i].name}`;
+                                }
+                                else {
+                                    genres += `${jsonData.genres[i].name}, `;
+                                }
+                            }
+
+                            movie += `<div class='div22' style='margin-left: 1.85rem; margin-bottom:0; width: 50%'><h2 style='margin-bottom:0;'>${title}</h2>`;
+                            movie += `<p style='margin-top: .25rem; font-size: .80rem;'>${release_date} | ${genres} | ${runtimeHours} ${runtimeMinutes}</p>`;
+                            movie += "<h3 style='margin-bottom: 0;'>Overview</h3>";
+                            movie += `<p style='font-size:.90rem; margin-top: .25rem;'>${overview}</p>`;
+                            movie += "<h3 style='margin-bottom: .25rem;'>Cast</h3>";
+                            movie += "</div>";
+                            movie += `<div class='div11' style='margin-left:2rem; margin-top: 1.5rem;'><img src='${image}' style='width: 100%; height: 57%;'/>`;
+                            movie += "</div>"
+
+                            $("#results").html("");
+                            $(".parent").html("");
+                            $(".parent1").append(movie);
+                            
+                        }
+                        else {
+                            var cast = "";
+                            image = `https://image.tmdb.org/t/p/w500/`;
+                            console.log("anime=>", url)
+                            if (sessionStorage.getItem("url1").includes("/movie") || sessionStorage.getItem("url1").includes("/multi")) {
+                                url = `https://api.themoviedb.org/3/movie/${movieID}/credits?${api_key}&language=en-US`;
+                            }
+                            else if (sessionStorage.getItem("url1").includes("/tv")) {
+                                url = `https://api.themoviedb.org/3/tv/${movieID}/credits?${api_key}&language=en-US`;
+                            }
+
+                            console.log("called");
+                            //https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key=<<api_key>>&language=en-US
+                            $.getJSON(url, function (jsonData) {
+                                console.log(jsonData);
+                                if (jsonData.cast[0].hasOwnProperty("name")) {
+                                    sessionStorage.setItem("name", jsonData.cast[0].name);
+                                }
+                                for (var i = 0; i < 5; i++) {
+                                    if (!jsonData.cast[i].hasOwnProperty("profile_path") || jsonData.cast[i].profile_path == null) {
+                                        image = "https://via.placeholder.com/360x500";
+                                    }
+                                    else {
+                                        image = `https://image.tmdb.org/t/p/w500/${jsonData.cast[i].profile_path}`;
+                                    }
+
+                                    cast += `<div class='cast' style='margin-left:.25rem; width: 100%;'><img style='cursor: pointer; width: 100%; height: 80%;' class='movieID' id='${jsonData.cast[i].id}' src='${image}'/><p style='font-size: .95rem; margin-top:0;'>${jsonData.cast[i].name}</p></div>`;
+                                }
+
+                                console.log(jsonData);
+
+                                $(".div33").append(cast).css({ "margin-top": "0" });
+                                $(".movieID").on('click', function () { getBookDetails($(this).attr("id")); });
+                            });
+                            var title = "";
+                            var overview = jsonData.overview;
+                            var genres = "";
+                            var vote = jsonData.vote_average;
+                            var release_date = "";
+                            var runtimeMinutes = "";
+
+                            if (url.includes("/movie")) {
+                                release_date = jsonData.release_date;
+                                var runtimeHours = Math.floor(jsonData.runtime / 60);
+                                runtimeMinutes = jsonData.runtime % 60 + "hr";
+                                console.log("movie");
+                            }
+                            else if (url.includes("/tv")) {
+                                var release_date = jsonData.first_air_date;
+                                var runtimeMinutes = jsonData.episode_run_time + "min";
+
+                                console.log("tv");
+                            }
+
+                            if (jsonData.hasOwnProperty('name')) {
+                                title = jsonData.name;
+                            }
+                            else {
+                                title = jsonData.original_title;
+                            }
+                            if (jsonData.poster_path == null) {
+                                image = "https://via.placeholder.com/360x500";
+                            }
+                            else {
+                                image += jsonData.poster_path;
+                            }
+
+                            for (var i = 0; i < jsonData.genres.length; i++) {
+                                if (i == jsonData.genres.length - 1) {
+                                    genres += `${jsonData.genres[i].name}`;
+                                }
+                                else {
+                                    genres += `${jsonData.genres[i].name}, `;
+                                }
+                            }
+
+                            movie += `<div class='div22' style='margin-left: 1.85rem; margin-bottom:0; width: 50%'><h2 style='margin-bottom:0;'>${title}</h2>`;
+                            movie += `<p style='margin-top: .25rem; font-size: .80rem;'>${release_date} | ${genres} | ${runtimeHours} ${runtimeMinutes}</p>`;
+                            movie += "<h3 style='margin-bottom: 0;'>Overview</h3>";
+                            movie += `<p style='font-size:.90rem; margin-top: .25rem;'>${overview}</p>`;
+                            movie += "<h3 style='margin-bottom: .25rem;'>Cast</h3>";
+                            movie += "</div>";
+                            movie += `<div class='div11' style='margin-left:2rem; margin-top: 1.5rem;'><img src='${image}' style='width: 100%; height: 57%;'/>`;
+                            movie += "</div>"
+
+                            $("#results").html("");
+                            $(".parent").html("");
+                            $(".parent1").append(movie);
+                        }
+                    });
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                // $("#results").html("<h2>Book ISBN: " + bookisbn + "</h2>");
+            }
+
+
+            $("#listLayout").click(function () {
+                $("#results").css({ "display": "flex", "flex-direction": "column" });
+            });
+
+            $("#gridLayout").click(function () {
+                $("#results").css({ "display": "flex", "flex-wrap": "wrap", "flex-direction": "row" });
+            });
+        });
+
+    </script>
+    <style>
+        body {
+            /* background-color: rgb(54, 54, 54); */
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .movieID {
+            color: aliceblue;
+        }
+
+        .movieID:hover {
+            color: #92ff67;
+        }
+
+        img {
+            /* border-top-left-radius: 20px;
+            border-top-right-radius: 20px; */
+            /* border-bottom-left-radius: 100%; */
+            /* border-bottom-right-radius: 20rem;
+            border-bottom-left-radius: 90px;
+            transition: border-radius 1s; */
+        }
+
+        img:hover {
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            transition: border-radius .90s;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        #pages {
+            margin-top: 2rem;
+        }
+
+        #results {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+        }
+
+        .book {
+            /* background-color: rgb(182, 183, 255); */
+
+            border: solid rgb(205, 255, 105);
+            /* border-width: medium; */
+            border-radius: 15px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transition: box-shadow 0.3s ease-in-out;
+            width: 20%;
+            margin: 2%;
+            /* padding: 1%; */
+            display: flex;
+            justify-content: flex-start;
+            align-items: stretch;
+            align-content: stretch;
+            flex-direction: column;
+            flex-wrap: nowrap;
+        }
+
+        .book:hover {
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+            /* box-shadow: 0 0 5px 10px #555; */
+            border: solid rgb(183, 255, 0);
+            transition: border-width 1s;
+            border-width: thick;
+        }
+
+        .page {
+            border: thin solid rgb(0, 225, 255);
+            padding: 10px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .radio-btns {
+            display: flex;
+            gap: 1rem;
+        }
+
+
+
+
+        .topnav {
+            overflow: hidden;
+            background-color: #e9e9e9;
+        }
+
+        .topnav a {
+            float: left;
+            display: block;
+            color: black;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .topnav a.active {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .topnav .search-container {
+            float: right;
+        }
+
+        .topnav input[type=text] {
+            padding: 6px;
+            margin-top: 8px;
+            font-size: 17px;
+            border: none;
+        }
+
+        .topnav .search-container button {
+            float: right;
+            padding: 6px 10px;
+            margin-top: 8px;
+            margin-right: 16px;
+            background: #ddd;
+            font-size: 17px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .topnav .search-container button:hover {
+            background: #ccc;
+        }
+
+        @media screen and (max-width: 600px) {
+            .topnav .search-container {
+                float: none;
+            }
+
+            .topnav a,
+            .topnav input[type=text],
+            .topnav .search-container button {
+                float: none;
+                display: block;
+                text-align: left;
+                width: 100%;
+                margin: 0;
+                padding: 14px;
+            }
+
+            .topnav input[type=text] {
+                border: 1px solid #ccc;
+            }
+        }
+
+        #searchTerm {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        #button1 {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .parent {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+
+        }
+
+        .div1 {
+            grid-area: 1 / 1 / 5 / 2;
+        }
+
+        .div2 {
+            grid-area: 1 / 2 / 5 / 6;
+        }
+
+        .div3 {
+            grid-area: 1 / 2 / 2 / 6;
+        }
+
+        /* .div4 { grid-area: 2 / 2 / 3 / 6; } */
+
+        .parent1 {
+            /* display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            grid-column-gap: 0px;
+            grid-row-gap: 0px; */
+
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+        }
+
+        .div11 {
+            grid-area: 1 / 1 / 4 / 2;
+        }
+
+        .div22 {
+            grid-area: 1 / 2 / 2 / 5;
+        }
+
+        .div33 {
+            grid-area: 2 / 2 / 3 / 5;
+            /* height: 100%; */
+            width: 80%;
+            height: 225px;
+            margin-left: 1.5rem;
+            margin-top: 6.5rem;
+            /* box-shadow: 1px 1px 2px rgba(1, 1, 1, 0.90); */
+            /* box-shadow: -12px -9px 5px 0px rgba(0, 0, 0, 0.75); */
+            display: flex;
+            /* display: block; */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topnav" style="background-color: #2196F3;">
+        <a class="active">Explore Movies & TV Shows</a>
+        <a href="#" id="tv" style="color: white; float: right;">Discover TV Shows</a>
+        <a href="#" id="movies" style="color: white; float: right;">Discover Movies</a>
+
+
+        <div class="search-container">
+            <form>
+                <input type="text" placeholder="Search.." name="search" id="searchTerm" value="Harry Potter">
+                <button type="button" id="button1"><i class="fa fa-search"></i></button>
+                <!-- <input type="button" id="button1" value="Search" /><i class="fa fa-search"></i></input> -->
+            </form>
+        </div>
+    </div>
+    <div style="float: right; margin-right: 3.30rem;">
+        <label>Safe Search: </label>
+        <span>on</span> <input type="radio" value="false" name="safeSearch" checked="checked">
+        <span>off</span> <input type="radio" value="true" name="safeSearch">
+    </div>
+
+
+    <!-- <div class="radio-btns">
+        <div>
+            <input class="btn" type="radio" value="movieSearch" name="user_selection" checked="checked">
+            <label>Search Movies</label>
+        </div>
+        <div>
+            <input type="radio" value="tvSearch" name="user_selection">
+            <label>Search TV Shows</label>
+        </div>
+        <div>
+            <input type="radio" value="movie" name="user_selection">
+            <label>Discover Movies</label>
+        </div>
+        <div>
+            <input type="radio" value="tv" name="user_selection">
+            <label>Discover TV Shows</label>
+        </div>
+    </div> -->
+
+    <br>
+
+    <!-- <input type="text" id="searchTerm" value="Harry Potter" />
+    <input type="button" id="button1" value="Search" /> -->
+
+    <!-- <label>Safe Search: </label>
+    <span>on</span> <input type="radio" value="false" name="safeSearch" checked="checked">
+    <span>off</span> <input type="radio" value="true" name="safeSearch"> -->
+
+    <p id="pages" style="display: inline; margin-left: 2.25rem;"></p>
+    <div style="margin-left: 86%;">
+        <button id="listLayout"><i class="fa fa-bars"></i> List</button>
+        <button id="gridLayout"><i class="fa fa-th-large"></i> Grid</button>
+    </div>
+    <!-- <input type="button" id="listLayout" value="Change to List-Layout" />
+        <input type="button" id="gridLayout" value="Change to Grid-Layout" /> -->
+
+
+
+    <div id="results"></div>
+    <div id="book"></div>
+    <div class="parent" style="margin-left: 20rem;">
+        <div class="div2"></div>
+        <!-- <div class="div1" style="background-color: blue;"></div>
+        <div class="div2" style="background-color: yellow;"> </div>
+        <div class="div3" style="background-color: purple;"> </div>
+        <div class="div4" style="background-color: green;"> </div> -->
+    </div>
+    <div class="parent1">
+        <div class="div11"> </div>
+        <div class="div22"> </div>
+        <div class="div33">
+            <div class="cast"></div>
+        </div>
+    </div>
+</body>
+
+</html>
