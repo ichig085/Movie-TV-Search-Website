@@ -40,7 +40,13 @@ $(document).ready(function () {
             sessionStorage.removeItem("media_type");
             sessionStorage.removeItem("name");
         }
-       
+        // do {
+        //     var userSearchInput = $("#searchTerm").val()
+        // }while (userSearchInput == "") {
+        //     alert("Invalid Search. Try again");
+        // }
+
+        //sessionStorage.setItem("url", url);
         var isAdult = $("input[name='safeSearch']:checked").val();
         url = `https://api.themoviedb.org/3/search/multi?query=${$("#searchTerm").val()}&${api_key}&language=en-US&page=1&include_adult=${isAdult}`;
         sessionStorage.setItem("url1", `https://api.themoviedb.org/3/search/multi?${api_key}&language=en-US&query=${$("#searchTerm").val()}&language=en-US&include_adult=false&page=`);
@@ -67,6 +73,17 @@ $(document).ready(function () {
 
         searchVidoesandPeople(url);
 
+
+        // if (sessionStorage.getItem("media_type") || sessionStorage.getItem("name")) {
+        //     sessionStorage.removeItem("media_type");
+        //     sessionStorage.removeItem("name");
+        // }
+        // var isAdult = $("input[name='safeSearch']:checked").val();
+        // url = `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=1&with_watch_monetization_types=flatrate`;
+
+        // sessionStorage.setItem("url1", `https://api.themoviedb.org/3/discover/movie?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=`);
+        // sessionStorage.setItem("url2", "&with_watch_monetization_types=flatrate");
+
     });
     $("#tv").click(function () {
         $(".trending").hide();
@@ -84,6 +101,8 @@ $(document).ready(function () {
         url = `https://api.themoviedb.org/3/discover/tv?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=1&with_watch_monetization_types=flatrate`;
         sessionStorage.setItem("url1", `https://api.themoviedb.org/3/discover/tv?${api_key}&language=en-US&sort_by=popularity.desc&include_adult=${isAdult}&include_video=false&page=`);
         sessionStorage.setItem("url2", "&with_watch_monetization_types=flatrate");
+
+
 
         searchVidoesandPeople(url);
     });
