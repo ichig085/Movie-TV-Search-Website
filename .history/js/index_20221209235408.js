@@ -105,6 +105,7 @@ $(document).ready(function () {
         $(".div22").empty();
         $(".div33").empty();
         isMultiSearch = false;
+
         if (servicePoint.includes("/multi") || servicePoint.includes("/trending")) {
             isMultiSearch = true;
         }
@@ -123,6 +124,8 @@ $(document).ready(function () {
 
             var isAdult = false;
             $("#pages").html("Pages: ");
+
+            //load page #s for user
             if (jsonData.total_pages > 5) {
                 for (i = 1; i <= 5; i++) {
                     $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
@@ -133,7 +136,11 @@ $(document).ready(function () {
                     $("#pages").append("<a class='page' href='#'>" + i + "</a> ");
                 }
             }
+
             $("#results").html("");
+
+            //performs a check to see if the user is getting additional info
+            /
             if (isMultiSearch || jsonData.results.hasOwnProperty("media_type")) {
                 console.log("ismultisearch triggered here");
                 if (Object.keys(multi_media_type).length) {
