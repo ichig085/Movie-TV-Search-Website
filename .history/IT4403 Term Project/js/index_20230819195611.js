@@ -432,172 +432,167 @@ $(document).ready(function () {
           try {
             // Fetch JSON data from the specified 'url' and process it using a callback function
             $.getJSON(url, function (jsonData) {
-              // Set the maximum number of cast members to be displayed
-              var castMax = 5;
+                // Set the maximum number of cast members to be displayed
+                var castMax = 5;
 
-              // Store the name of the first cast member in the session storage if available
-              if (jsonData.cast[0].hasOwnProperty("name")) {
-                sessionStorage.setItem("name", jsonData.cast[0].name);
-              }
-
-              // If the actual number of cast members is less than 'castMax', update 'castMax'
-              if (jsonData.cast.length < castMax) {
-                castMax = jsonData.cast.length;
-              }
-
-              // Loop through the cast members up to the 'castMax' limit
-              for (var i = 0; i < castMax; i++) {
-                // Check if the current cast member doesn't have a 'profile_path' or it's null
-                if (
-                  !jsonData.cast[i].hasOwnProperty("profile_path") ||
-                  jsonData.cast[i].profile_path == null
-                ) {
-                  // If no profile image is available, use a placeholder image URL
-                  image = "https://via.placeholder.com/360x500";
-                } else {
-                  // Use the image URL from the JSON data for the current cast member
-                  image = `https://image.tmdb.org/t/p/w500/${jsonData.cast[i].profile_path}`;
+                // Store the name of the first cast member in the session storage if available
+                if (jsonData.cast[0].hasOwnProperty("name")) {
+                    sessionStorage.setItem("name", jsonData.cast[0].name);
                 }
 
-                // Construct the HTML content for the current cast member with their image and name
-                cast += `<div class='cast' style='margin-left:.25rem; width: 100%;'><img style='cursor: pointer; width: 100%; height: 80%;' class='movieID' id='${jsonData.cast[i].id}' src='${image}'/><p style='font-size: .95rem; margin-top:0;'>${jsonData.cast[i].name}</p></div>`;
-              }
+                // If the actual number of cast members is less than 'castMax', update 'castMax'
+                if (jsonData.cast.length < castMax) {
+                    castMax = jsonData.cast.length;
+                }
 
-              // Append the constructed 'cast' HTML content to the element with class 'div33'
-              $(".div33").append(cast).css({ "margin-top": "0" });
-
-              // Set 'getPerson' to true to indicate that person information is being retrieved
-              getPerson = true;
-
-              // Attach a click event handler to elements with class 'movieID'
-              $(".movieID").on("click", function () {
-                // Call the 'getVideoOrPersonDetails' function with the clicked element's ID
-                getVideoOrPersonDetails($(this).attr("id"));
-              });
+                // Loop through the cast members up to the 'castMax' limit
+                for (var i = 0; i < castMax; i++) {
+                    // Check if the current cast member doesn't have a 'profile_path' or it's null
+                    if (
+                    !jsonData.cast[i].hasOwnProperty("profile_path") ||
+                    jsonData.cast[i].profile_path == null
+                    ) {
+                    // If no profile image is available, use a placeholder image URL
+                    image = "https://via.placeholder.com/360x500";
+                    } else {
+                    // Use the image URL from the JSON data for the current cast member
+                    image = `https://image.tmdb.org/t/p/w500/${jsonData.cast[i].profile_path}`;
+                    }
+                
+                    // Construct the HTML content for the current cast member with their image and name
+                    cast += `<div class='cast' style='margin-left:.25rem; width: 100%;'><img style='cursor: pointer; width: 100%; height: 80%;' class='movieID' id='${jsonData.cast[i].id}' src='${image}'/><p style='font-size: .95rem; margin-top:0;'>${jsonData.cast[i].name}</p></div>`;
+                }
+                
+                // Append the constructed 'cast' HTML content to the element with class 'div33'
+                $(".div33").append(cast).css({ "margin-top": "0" });
+                
+                // Set 'getPerson' to true to indicate that person information is being retrieved
+                getPerson = true;
+                
+                // Attach a click event handler to elements with class 'movieID'
+                $(".movieID").on("click", function () {
+                    // Call the 'getVideoOrPersonDetails' function with the clicked element's ID
+                    getVideoOrPersonDetails($(this).attr("id"));
+                });
             });
           } catch (error) {
             // Handle the error case where cast information is not available
 
-            // Set the 'cast' message to indicate no cast information is available
-            cast = "We don't have any cast to add to this show";
+                // Set the 'cast' message to indicate no cast information is available
+                cast = "We don't have any cast to add to this show";
 
-            // Append the 'cast' message to the element with class 'div33'
-            $(".div33").append(cast).css({ "margin-top": "0" });
+                // Append the 'cast' message to the element with class 'div33'
+                $(".div33").append(cast).css({ "margin-top": "0" });
 
-            // Set 'getPerson' to false to indicate that person information is not being retrieved
-            getPerson = false;
-          }
+                // Set 'getPerson' to false to indicate that person information is not being retrieved
+                getPerson = false;
+            }
+          
+            // Initialize variables to store various information about the movie or show
+            var title = "";
+            var overview = "";
+            var genres = "";
+            var vote = Math.round(jsonData.vote_average);
+            var release_date = "";
+            var runtimeHours = "";
+            var runtimeMinutes = "";
 
-          // Initialize variables to store various information about the movie or show
-          var title = "";
-          var overview = "";
-          var genres = "";
-          var vote = Math.round(jsonData.vote_average);
-          var release_date = "";
-          var runtimeHours = "";
-          var runtimeMinutes = "";
-
-          // Check if overview information is available and handle the cases
-          if (
-            (jsonData.hasOwnProperty("overview") == true &&
-              jsonData.overview == "") ||
+            // Check if overview information is available and handle the cases
+            if (
+            (jsonData.hasOwnProperty("overview") == true && jsonData.overview == "") ||
             (jsonData.hasOwnProperty("overview") && jsonData.overview == null)
-          ) {
+            ) {
             // Handle the case where overview is missing or empty
 
             if (jsonData.original_langauge != "en") {
-              // If the original language is not English, provide a translation message
-              overview =
+                // If the original language is not English, provide a translation message
+                overview =
                 "We don't have an overview translated in English. Please be assured we're working diligently to update this.";
             } else {
-              // If the original language is English, provide a general missing overview message
-              overview =
+                // If the original language is English, provide a general missing overview message
+                overview =
                 "We don't have an overview for this show at the moment. Please be assured we're working diligently to update this.";
             }
-          } else {
+            } else {
             // If overview is available, assign it to the 'overview' variable
             console.log("else language called");
             overview = jsonData.overview;
-          }
+            }
 
-          // Check if the URL indicates a movie or a TV show
-          if (url.includes("/movie")) {
-            // If the content is a movie
-            release_date = jsonData.release_date; // Assign the release date of the movie
 
-            // Calculate runtime hours and minutes
-            var runtimeHours = Math.floor(jsonData.runtime / 60) + "hr"; // Calculate hours
-            runtimeMinutes = (jsonData.runtime % 60) + "min"; // Calculate remaining minutes
-          } else if (url.includes("/tv")) {
-            // If the content is a TV show
-            var release_date = jsonData.first_air_date; // Assign the first air date of the TV show
+            // Check if the URL indicates a movie or a TV show
+            if (url.includes("/movie")) {
+                // If the content is a movie
+                release_date = jsonData.release_date; // Assign the release date of the movie
+            
+                // Calculate runtime hours and minutes
+                var runtimeHours = Math.floor(jsonData.runtime / 60) + "hr"; // Calculate hours
+                runtimeMinutes = (jsonData.runtime % 60) + "min"; // Calculate remaining minutes
+            } else if (url.includes("/tv")) {
+                // If the content is a TV show
+                var release_date = jsonData.first_air_date; // Assign the first air date of the TV show
+            
+                if (jsonData.episode_run_time.length > 0) {
+                // Check if episode runtime information is available
+                runtimeMinutes = "| " + jsonData.episode_run_time + "min"; // Assign episode runtime
+                } else {
+                runtimeHours = ""; // If episode runtime information is not available, reset hours
+                runtimeMinutes = ""; // and minutes
+                }
+            }
+  
 
-            if (jsonData.episode_run_time.length > 0) {
-              // Check if episode runtime information is available
-              runtimeMinutes = "| " + jsonData.episode_run_time + "min"; // Assign episode runtime
+            // Check if the JSON data has the property "name"
+            if (jsonData.hasOwnProperty("name")) {
+                title = jsonData.name; // Assign the value of "name" property to the title variable
             } else {
-              runtimeHours = ""; // If episode runtime information is not available, reset hours
-              runtimeMinutes = ""; // and minutes
+                title = jsonData.original_title; // If "name" property is not present, assign "original_title" property to the title variable
             }
-          }
-
-          // Check if the JSON data has the property "name"
-          if (jsonData.hasOwnProperty("name")) {
-            title = jsonData.name; // Assign the value of "name" property to the title variable
-          } else {
-            title = jsonData.original_title; // If "name" property is not present, assign "original_title" property to the title variable
-          }
-
-          // Check if the "poster_path" property is null
-          if (jsonData.poster_path == null) {
-            image = "https://via.placeholder.com/360x500"; // If null, assign a placeholder image URL to the image variable
-          } else {
-            image += jsonData.poster_path; // If not null, concatenate "poster_path" property value to the image variable
-          }
-
-          // Check if the JSON data has the property "genres"
-          if (jsonData.hasOwnProperty("genres")) {
-            genres = " | "; // Initialize genres with a separator
-
-            // Loop through each genre in the jsonData.genres array
-            for (var i = 0; i < jsonData.genres.length; i++) {
-              if (i == jsonData.genres.length - 1) {
-                // If it's the last genre, create a link with genre name and ID
-                genres += `<a href="#" id=${jsonData.genres[i].id}>${jsonData.genres[i].name}</a>`;
-              } else {
-                // For other genres, create a link with genre name and comma separator
-                genres += `<a href="#">${jsonData.genres[i].name}</a>, `;
-              }
+            
+            // Check if the "poster_path" property is null
+            if (jsonData.poster_path == null) {
+                image = "https://via.placeholder.com/360x500"; // If null, assign a placeholder image URL to the image variable
+            } else {
+                image += jsonData.poster_path; // If not null, concatenate "poster_path" property value to the image variable
             }
-          } else {
-            genres = ""; // If "genres" property is not present, set genres to an empty string
-          }
+  
 
-          // Construct the HTML for displaying movie details
-          movie += `<div class='div22' style='margin-left: 1.85rem; margin-bottom:0; width: 50%'>`;
-          movie += `<h2 style='margin-bottom:0;'>${title}</h2>`; // Display movie title
-          movie += `<p style='margin-top: .25rem; font-size: .80rem;'>${release_date} ${genres} ${runtimeHours} ${runtimeMinutes}</p>`; // Display release date, genres, and runtime
-          movie += "<h3 style='margin-bottom: 0;'>Overview</h3>"; // Header for overview section
-          movie += `<p style='font-size:1.15rem; margin-top: .25rem;'>${overview}</p>`; // Display movie overview
-          movie += "<h3 style='margin-bottom: .25rem;'>Cast</h3>"; // Header for cast section
-          movie += "</div>"; // End of div22
+            // Check if the JSON data has the property "genres"
+            if (jsonData.hasOwnProperty("genres")) {
+                genres = " | "; // Initialize genres with a separator
+            
+                // Loop through each genre in the jsonData.genres array
+                for (var i = 0; i < jsonData.genres.length; i++) {
+                if (i == jsonData.genres.length - 1) {
+                    // If it's the last genre, create a link with genre name and ID
+                    genres += `<a href="#" id=${jsonData.genres[i].id}>${jsonData.genres[i].name}</a>`;
+                } else {
+                    // For other genres, create a link with genre name and comma separator
+                    genres += `<a href="#">${jsonData.genres[i].name}</a>, `;
+                }
+                }
+            } else {
+                genres = ""; // If "genres" property is not present, set genres to an empty string
+            }
+  
 
-          // Construct the HTML for displaying movie image
-          movie += `<div class='div11' style='margin-left:2rem; margin-top: 1.5rem;'>`;
-          movie += `<img src='${image}' style='width: 100%; height: 57%;'/>`; // Display movie image
-          movie += "</div>"; // End of div11
+          movie += `<div class='div22' style='margin-left: 1.85rem; margin-bottom:0; width: 50%'><h2 style='margin-bottom:0;'>${title}</h2>`;
+          movie += `<p style='margin-top: .25rem; font-size: .80rem;'>${release_date} ${genres} ${runtimeHours} ${runtimeMinutes}</p>`;
+          movie += "<h3 style='margin-bottom: 0;'>Overview</h3>";
+          movie += `<p style='font-size:1.15rem; margin-top: .25rem;'>${overview}</p>`;
+          movie += "<h3 style='margin-bottom: .25rem;'>Cast</h3>";
+          movie += "</div>";
+          movie += `<div class='div11' style='margin-left:2rem; margin-top: 1.5rem;'><img src='${image}' style='width: 100%; height: 57%;'/>`;
+          movie += "</div>";
 
-          // Clear existing content and update with the constructed movie details
-          $("#results").html(""); // Clear any previous content in the results div
-          $(".parent").html(""); // Clear any previous content in the parent div
-          $(".parent1").append(movie); // Append the constructed movie details to the parent1 div
+          $("#results").html("");
+          $(".parent").html("");
+          $(".parent1").append(movie);
         } else {
-          // Initialize variables for cast and image
           var cast = "";
           image = `https://image.tmdb.org/t/p/w500/`;
-
-          // Check if the URL indicates a movie or TV show page
-          // If true, construct the URL for retrieving cast information
+          //may be possible to remove sessionstore and just use url.include for these just like
+          //trending
           if (
             sessionStorage.getItem("url1").includes("/movie") ||
             sessionStorage.getItem("url1").includes("/multi") ||
